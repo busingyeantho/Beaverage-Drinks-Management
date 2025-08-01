@@ -201,37 +201,74 @@ const LoadingReturnsForm: React.FC = () => {
             </GridItem>
 
             {/* JIM POMBE Loading */}
-            <GridItem xs={12} style={{ marginTop: '16px' }}>
-              <Typography variant="subtitle1" color="primary">JIM POMBE</Typography>
+            <GridItem xs={12} style={{ marginTop: '24px' }}>
+              <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>JIM POMBE LOADING</Typography>
+              <Divider sx={{ mb: 2 }} />
             </GridItem>
-            <GridItem xs={12} md={4}>
+            
+            {/* First Row */}
+            <GridItem xs={12} md={3}>
               <TextField
                 fullWidth
                 type="number"
                 name="loadingJimPombe24x200"
-                label="24×200 Cartons"
+                label="24×200ml Cartons"
                 value={formData.loadingJimPombe24x200}
                 onChange={handleChange}
+                variant="outlined"
+                size="small"
+                sx={{ mb: 2 }}
               />
             </GridItem>
-            <GridItem xs={12} md={4}>
+            <GridItem xs={12} md={3}>
               <TextField
                 fullWidth
                 type="number"
                 name="loadingJimPombePieces"
-                label="24×200 Pieces"
+                label="24×200ml Pieces"
                 value={formData.loadingJimPombePieces}
                 onChange={handleChange}
+                variant="outlined"
+                size="small"
+                sx={{ mb: 2 }}
               />
             </GridItem>
-            <GridItem xs={12} md={4}>
+            <GridItem xs={12} md={3}>
               <TextField
                 fullWidth
                 type="number"
                 name="loadingJimPombe12x200"
-                label="12×200 Cartons"
+                label="12×200ml Cartons"
                 value={formData.loadingJimPombe12x200}
                 onChange={handleChange}
+                variant="outlined"
+                size="small"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'primary.main',
+                      borderWidth: '2px',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'primary.main',
+                    fontWeight: 'bold',
+                  },
+                }}
+              />
+            </GridItem>
+            <GridItem xs={12} md={3}>
+              <TextField
+                fullWidth
+                type="number"
+                name="loadingJimPombePieces"
+                label="24×200ml Pieces"
+                value={formData.loadingJimPombePieces || 0}
+                onChange={handleChange}
+                variant="outlined"
+                size="small"
+                sx={{ mb: 2 }}
               />
             </GridItem>
 
@@ -277,8 +314,9 @@ const LoadingReturnsForm: React.FC = () => {
             </GridItem>
 
             {/* JIM POMBE Returns */}
-            <GridItem xs={12} style={{ marginTop: '16px' }}>
-              <Typography variant="subtitle1" color="error">JIM POMBE Returns</Typography>
+            <GridItem xs={12} style={{ marginTop: '24px' }}>
+              <Typography variant="subtitle1" color="error" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>JIM POMBE RETURNS</Typography>
+              <Divider sx={{ mb: 2 }} />
             </GridItem>
             <GridItem xs={12} md={4}>
               <TextField
@@ -310,7 +348,6 @@ const LoadingReturnsForm: React.FC = () => {
                 onChange={handleChange}
               />
             </GridItem>
-
             {/* Submit Button */}
             <GridItem xs={12} style={{ marginTop: '24px' }}>
               <Button 
@@ -323,6 +360,7 @@ const LoadingReturnsForm: React.FC = () => {
                 Save Record
               </Button>
             </GridItem>
+
           </GridContainer>
         </form>
       </div>

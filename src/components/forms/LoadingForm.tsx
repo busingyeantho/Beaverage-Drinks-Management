@@ -243,7 +243,7 @@ const LoadingForm: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Product</TableCell>
+                    <TableCell>Product</TableCell>  
                     <TableCell>Unit</TableCell>
                     <TableCell align="right">Quantity</TableCell>
                   </TableRow>
