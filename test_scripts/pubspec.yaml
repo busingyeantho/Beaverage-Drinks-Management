@@ -1,0 +1,12 @@
+name: google_sheets_test
+version: 1.0.0
+description: A script to test Google Sheets API integration
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  dotenv: ^1.0.0
+  googleapis: ^12.0.0
+  googleapis_auth: ^1.4.1
+  http: ^1.1.0

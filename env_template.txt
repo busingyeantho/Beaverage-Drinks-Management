@@ -1,0 +1,12 @@
+# Google Sheets API Configuration
+# Replace these values with your actual Google Sheets API credentials
+
+# Your Google Sheets Spreadsheet ID (found in the URL)
+GOOGLE_SHEETS_SPREADSHEET_ID=your_spreadsheet_id_here
+
+# Service Account Email (from your Google Cloud Console)
+GOOGLE_SHEETS_CLIENT_EMAIL=your_service_account_email@your-project.iam.gserviceaccount.com
+
+# Private Key (from your service account JSON file)
+# Make sure to include the entire private key including -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY-----
+GOOGLE_SHEETS_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour private key content here\n-----END PRIVATE KEY-----\n" 
