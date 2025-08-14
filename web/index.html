@@ -35,8 +35,67 @@
 
   <title>john_pombe</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- App Configuration -->
+  <script src="config.js"></script>
+  <script>
+    // Modern Flutter web initialization
+    window.addEventListener('load', function() {
+      // Initialize Flutter engine with configuration
+      if (window.flutterConfiguration) {
+        // For backward compatibility, we'll keep this but use it differently
+        console.log('Configuration loaded:', window.flutterConfiguration);
+      }
+    });
+  </script>
 </head>
 <body>
+  <div id="loading">Loading app...</div>
+  <div id="error" style="color: red; display: none;"></div>
+  
+  <script>
+    // Show loading message
+    console.log('Initializing app...');
+    
+    // Unregister any existing service workers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          console.log('Unregistering service worker:', registration);
+          registration.unregister();
+        }
+      }).catch(function(error) {
+        console.log('Service Worker unregistration failed: ', error);
+      });
+    }
+    
+    // Clear caches
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names) {
+          console.log('Deleting cache:', name);
+          caches.delete(name);
+        }
+      });
+    }
+  </script>
+  
   <script src="flutter_bootstrap.js" async></script>
+  
+  <script>
+    // Error handling
+    window.addEventListener('error', function(event) {
+      console.error('Global error:', event.error);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').textContent = 'Error: ' + (event.error?.message || 'Unknown error occurred');
+    });
+    
+    // Flutter web initialization error handling
+    window.addEventListener('flutter-error', function(event) {
+      console.error('Flutter error:', event.detail);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').textContent = 'Flutter Error: ' + JSON.stringify(event.detail);
+    });
+  </script>
 </body>
 </html>

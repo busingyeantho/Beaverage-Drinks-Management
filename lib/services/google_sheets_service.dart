@@ -1,9 +1,6 @@
-import 'dart:async';
-import 'dart:io';
-import 'dart:convert';
-
+import 'dart:js' as js;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/services.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
@@ -34,12 +31,54 @@ class GoogleSheetsService {
   final String _privateKey;
 
   GoogleSheetsService()
-    : _spreadsheetId = dotenv.get('GOOGLE_SHEETS_SPREADSHEET_ID'),
-      _clientEmail = dotenv.get('GOOGLE_SHEETS_CLIENT_EMAIL'),
-      _privateKey = dotenv
-          .get('GOOGLE_SHEETS_PRIVATE_KEY')
+    : _spreadsheetId = _getConfigValue('GOOGLE_SHEETS_SPREADSHEET_ID'),
+      _clientEmail = _getConfigValue('GOOGLE_SHEETS_CLIENT_EMAIL'),
+      _privateKey = _getConfigValue('GOOGLE_SHEETS_PRIVATE_KEY')
           .replaceAll(r'\n', '\n') {
     _validateEnvironment();
+  }
+
+  // Helper function to get config value from either window object or .env file
+  static String _getConfigValue(String key) {
+    try {
+      // Try to get from window.appConfiguration first (new structure)
+      if (kIsWeb && js.context.hasProperty('appConfiguration')) {
+        try {
+          final config = js.JsObject.fromBrowserObject(js.context['appConfiguration']);
+          if (config.hasProperty(key)) {
+            final value = config[key];
+            if (value != null) {
+              debugPrint('Config value for $key found in window.appConfiguration');
+              return value.toString();
+            }
+          }
+        } catch (e) {
+          debugPrint('Error accessing window.appConfiguration: $e');
+        }
+      }
+      
+      // Try to get from window.flutterConfiguration (legacy fallback)
+      if (kIsWeb && js.context.hasProperty('flutterConfiguration')) {
+        try {
+          final config = js.JsObject.fromBrowserObject(js.context['flutterConfiguration']);
+          if (config.hasProperty(key)) {
+            final value = config[key];
+            if (value != null) {
+              debugPrint('Config value for $key found in window.flutterConfiguration (legacy)');
+              return value.toString();
+            }
+          }
+        } catch (e) {
+          debugPrint('Error accessing window.flutterConfiguration: $e');
+        }
+      }
+      
+      // Fall back to .env file
+      return dotenv.get(key);
+    } catch (e) {
+      debugPrint('Error getting config value for $key: $e');
+      rethrow;
+    }
   }
 
   void _validateEnvironment() {

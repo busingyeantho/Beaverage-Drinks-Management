@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'screens/loading_screen.dart';
@@ -7,12 +6,26 @@ import 'screens/returns_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/main_menu_screen.dart';
 import 'services/auth_service.dart';
+import 'services/firebase_sheets_service.dart';
 import 'widgets/role_guard.dart';
 import 'models/user_model.dart';
 import 'firebase_options.dart';
 
+// Helper function to get config value
+String _getConfigValue(String key, {String? defaultValue}) {
+  // This function is kept for backward compatibility
+  // In the new implementation, we'll use Firebase Remote Config or environment variables
+  if (defaultValue != null) return defaultValue;
+  throw Exception('$key not found in environment variables');
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('App starting...');
+  FlutterError.onError = (details) {
+    debugPrint('FLUTTER ERROR: ${details.exception}');
+    debugPrint('STACK TRACE: ${details.stack}');
+  };
 
   try {
     // Initialize Firebase
@@ -20,12 +33,16 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Load environment variables
-    await dotenv.load(fileName: ".env");
+    // Initialize FirebaseSheetsService with your Firebase Functions URL
+    final functionsBaseUrl = 'https://us-central1-${DefaultFirebaseOptions.currentPlatform.projectId}.cloudfunctions.net';
+    final firebaseSheetsService = FirebaseSheetsService(functionsBaseUrl: functionsBaseUrl);
 
     runApp(
       MultiProvider(
-        providers: [ChangeNotifierProvider(create: (_) => AuthService())],
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthService()),
+          Provider<FirebaseSheetsService>.value(value: firebaseSheetsService),
+        ],
         child: const MyApp(),
       ),
     );
