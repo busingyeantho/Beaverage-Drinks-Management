@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:googleapis_auth/auth_io.dart';
@@ -8,8 +7,7 @@ import 'package:dotenv/dotenv.dart';
 Future<void> main() async {
   try {
     // Load environment variables
-    final env = DotEnv(includePlatformEnvironment: true);
-    env.load();
+    final env = DotEnv(includePlatformEnvironment: true)..load();
 
     // Get credentials from environment
     final clientEmail = env['GOOGLE_SHEETS_CLIENT_EMAIL']!;
@@ -19,11 +17,10 @@ Future<void> main() async {
     print('🔑 Loaded environment variables');
 
     // Clean up the private key
-    privateKey =
-        privateKey
-            .replaceAll(r'\n', '\n') // Handle escaped newlines
-            .replaceAll('"', '') // Remove any quotes
-            .trim();
+    privateKey = privateKey
+        .replaceAll(r'\n', '\n') // Handle escaped newlines
+        .replaceAll('"', '') // Remove any quotes
+        .trim();
 
     print('ℹ️ Client Email: $clientEmail');
     print('ℹ️ Spreadsheet ID: $spreadsheetId');
@@ -40,9 +37,12 @@ Future<void> main() async {
 
     // Create an authenticated HTTP client
     print('🔐 Authenticating with Google...');
-    final authClient = await clientViaServiceAccount(credentials, [
-      SheetsApi.spreadsheetsReadonlyScope,
-    ], baseClient: http.Client());
+    final authClient = await clientViaServiceAccount(
+        credentials,
+        [
+          SheetsApi.spreadsheetsReadonlyScope,
+        ],
+        baseClient: http.Client());
 
     print('✅ Authentication successful');
 
@@ -83,11 +83,9 @@ Future<void> main() async {
         print('ℹ️ No data found in range $range');
       } else {
         print('📋 Found ${response.values!.length} rows of data:');
-        for (
-          var i = 0;
-          i < (response.values!.length > 5 ? 5 : response.values!.length);
-          i++
-        ) {
+        for (var i = 0;
+            i < (response.values!.length > 5 ? 5 : response.values!.length);
+            i++) {
           print('   ${response.values![i]}');
         }
         if (response.values!.length > 5) {

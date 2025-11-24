@@ -29,12 +29,17 @@ class GoogleSheetsService {
   final String _spreadsheetId;
   final String _clientEmail;
   final String _privateKey;
+  bool _isConfigured = false;
+
+  // Public getter to check if Google Sheets is configured
+  bool get isConfigured => _isConfigured;
 
   GoogleSheetsService()
     : _spreadsheetId = _getConfigValue('GOOGLE_SHEETS_SPREADSHEET_ID'),
       _clientEmail = _getConfigValue('GOOGLE_SHEETS_CLIENT_EMAIL'),
-      _privateKey = _getConfigValue('GOOGLE_SHEETS_PRIVATE_KEY')
-          .replaceAll(r'\n', '\n') {
+      _privateKey = _getConfigValue(
+        'GOOGLE_SHEETS_PRIVATE_KEY',
+      ).replaceAll(r'\n', '\n') {
     _validateEnvironment();
   }
 
@@ -44,11 +49,15 @@ class GoogleSheetsService {
       // Try to get from window.appConfiguration first (new structure)
       if (kIsWeb && js.context.hasProperty('appConfiguration')) {
         try {
-          final config = js.JsObject.fromBrowserObject(js.context['appConfiguration']);
+          final config = js.JsObject.fromBrowserObject(
+            js.context['appConfiguration'],
+          );
           if (config.hasProperty(key)) {
             final value = config[key];
             if (value != null) {
-              debugPrint('Config value for $key found in window.appConfiguration');
+              debugPrint(
+                'Config value for $key found in window.appConfiguration',
+              );
               return value.toString();
             }
           }
@@ -56,15 +65,19 @@ class GoogleSheetsService {
           debugPrint('Error accessing window.appConfiguration: $e');
         }
       }
-      
+
       // Try to get from window.flutterConfiguration (legacy fallback)
       if (kIsWeb && js.context.hasProperty('flutterConfiguration')) {
         try {
-          final config = js.JsObject.fromBrowserObject(js.context['flutterConfiguration']);
+          final config = js.JsObject.fromBrowserObject(
+            js.context['flutterConfiguration'],
+          );
           if (config.hasProperty(key)) {
             final value = config[key];
             if (value != null) {
-              debugPrint('Config value for $key found in window.flutterConfiguration (legacy)');
+              debugPrint(
+                'Config value for $key found in window.flutterConfiguration (legacy)',
+              );
               return value.toString();
             }
           }
@@ -72,23 +85,32 @@ class GoogleSheetsService {
           debugPrint('Error accessing window.flutterConfiguration: $e');
         }
       }
-      
-      // Fall back to .env file
-      return dotenv.get(key);
+
+      // Fall back to .env file (graceful default)
+      try {
+        final value = dotenv.maybeGet(key);
+        return value ?? '';
+      } catch (e) {
+        // dotenv not initialized yet - this is OK, will try again later
+        return '';
+      }
     } catch (e) {
-      debugPrint('Error getting config value for $key: $e');
-      rethrow;
+      // Suppress error - will try window config or .env later
+      return '';
     }
   }
 
   void _validateEnvironment() {
-    if (_spreadsheetId.isEmpty || _clientEmail.isEmpty || _privateKey.isEmpty) {
-      throw GoogleSheetsException(
-        'Missing required Google Sheets environment variables. Please check your .env file.\n'
-        'Required variables:\n'
-        '- GOOGLE_SHEETS_SPREADSHEET_ID: ${_spreadsheetId.isEmpty ? "MISSING" : "✓"}\n'
-        '- GOOGLE_SHEETS_CLIENT_EMAIL: ${_clientEmail.isEmpty ? "MISSING" : "✓"}\n'
-        '- GOOGLE_SHEETS_PRIVATE_KEY: ${_privateKey.isEmpty ? "MISSING" : "✓"}',
+    _isConfigured =
+        _spreadsheetId.isNotEmpty &&
+        _clientEmail.isNotEmpty &&
+        _privateKey.isNotEmpty;
+    if (!_isConfigured) {
+      debugPrint(
+        'Google Sheets not fully configured. Missing values: '
+        '${_spreadsheetId.isEmpty ? 'SPREADSHEET_ID ' : ''}'
+        '${_clientEmail.isEmpty ? 'CLIENT_EMAIL ' : ''}'
+        '${_privateKey.isEmpty ? 'PRIVATE_KEY' : ''}',
       );
     }
   }
@@ -109,6 +131,11 @@ class GoogleSheetsService {
   AutoRefreshingAuthClient? _client;
 
   Future<SheetsApi> get _api async {
+    if (!_isConfigured) {
+      throw GoogleSheetsException(
+        'Google Sheets is not configured for this build.',
+      );
+    }
     if (_sheetsApi == null) {
       await _initialize();
     }
@@ -325,14 +352,14 @@ class GoogleSheetsService {
   Future<List<List<dynamic>>> getSheetDataWithValidation(String range) async {
     final sheetName = range.split('!')[0];
     final exists = await sheetExists(sheetName);
-    
+
     if (!exists) {
       final availableSheets = await getSheetNames();
       throw GoogleSheetsException(
         'Sheet "$sheetName" not found. Available sheets: ${availableSheets.join(", ")}',
       );
     }
-    
+
     return getSheetData(range);
   }
 }

@@ -1,4 +1,5 @@
 enum UserRole {
+  pending, // New users awaiting approval
   superAdmin,
   loadingAdmin,
   returnsAdmin,
@@ -26,7 +27,7 @@ class AppUser {
     return AppUser(
       id: json['id'] as String,
       email: json['email'] as String,
-      role: _roleFromString(json['role'] as String? ?? 'loadingAdmin'),
+      role: _roleFromString(json['role'] as String? ?? 'pending'),
       department: json['department'] as String?,
       displayName: json['displayName'] as String? ?? 'Guest',
       photoUrl: json['photoUrl'] as String?,
@@ -46,6 +47,8 @@ class AppUser {
 
   static UserRole _roleFromString(String role) {
     switch (role.toLowerCase()) {
+      case 'pending':
+        return UserRole.pending;
       case 'superadmin':
         return UserRole.superAdmin;
       case 'loadingadmin':
@@ -55,11 +58,15 @@ class AppUser {
       case 'salesadmin':
         return UserRole.salesAdmin;
       default:
-        return UserRole.loadingAdmin; // Default role
+        return UserRole.pending; // Default to pending - requires approval
     }
   }
 
   bool get canApproveData => role == UserRole.superAdmin;
+  
+  bool get isPending => role == UserRole.pending;
+  
+  bool get isActive => role != UserRole.pending;
   
   bool canEditLoadingData() => [
         UserRole.superAdmin,

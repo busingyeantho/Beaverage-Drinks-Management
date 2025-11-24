@@ -41,12 +41,14 @@ dependencies:
   path_provider: ^2.1.1  # For accessing local files
   flutter_dotenv: ^5.1.0  # For environment variables
   provider: ^6.1.1  # For state management
-  firebase_core: ^2.24.2  # Firebase core
+  firebase_core:  # Firebase core
   firebase_auth: ^4.17.9  # Firebase Authentication
+  cloud_firestore:  # Firestore for role management
   google_sign_in: ^6.1.6  # Google Sign-In
   dotenv: 4.2.0
   fl_chart: ^0.66.2  # For creating charts and graphs
   syncfusion_flutter_charts: ^24.2.9  # Alternative chart library with more features
+  shared_preferences: ^2.2.2  # For storing PIN securely
 
 dev_dependencies:
   flutter_test:

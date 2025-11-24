@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/loading_screen.dart';
 import 'screens/returns_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/main_menu_screen.dart';
+import 'screens/user_management_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firebase_sheets_service.dart';
-import 'widgets/role_guard.dart';
+import 'services/pin_service.dart';
 import 'models/user_model.dart';
 import 'firebase_options.dart';
 
@@ -28,19 +32,31 @@ Future<void> main() async {
   };
 
   try {
+    // Load environment variables (for Google Sheets configuration)
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      debugPrint('Note: .env file not found or could not be loaded: $e');
+      // Continue - Google Sheets service will try window config on web
+    }
+
     // Initialize Firebase
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
     // Initialize FirebaseSheetsService with your Firebase Functions URL
-    final functionsBaseUrl = 'https://us-central1-${DefaultFirebaseOptions.currentPlatform.projectId}.cloudfunctions.net';
-    final firebaseSheetsService = FirebaseSheetsService(functionsBaseUrl: functionsBaseUrl);
+    final functionsBaseUrl =
+        'https://us-central1-${DefaultFirebaseOptions.currentPlatform.projectId}.cloudfunctions.net';
+    final firebaseSheetsService = FirebaseSheetsService(
+      functionsBaseUrl: functionsBaseUrl,
+    );
 
     runApp(
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthService()),
+          ChangeNotifierProvider(create: (_) => PinService()),
           Provider<FirebaseSheetsService>.value(value: firebaseSheetsService),
         ],
         child: const MyApp(),
@@ -69,10 +85,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const AuthWrapper(),
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginScreen(),
         '/loading': (context) => const LoadingScreen(),
         '/returns': (context) => const ReturnsScreen(),
         '/sales': (context) => const SalesScreen(),
+        '/users': (context) => const UserManagementScreen(),
         // Add other routes here
       },
       theme: ThemeData(
@@ -97,135 +115,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
+// AuthWrapper is now handled by SplashScreen
 
-  @override
-  Widget build(BuildContext context) {
-    // Bypass authentication for now and go directly to the main menu
-    return const MainMenuScreen();
-
-    // Uncomment the code below to re-enable authentication later
-    /*
-    final authService = Provider.of<AuthService>(context);
-
-    return FutureBuilder<void>(
-      future: authService.checkAuthState(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (authService.isAuthenticated) {
-            // Redirect based on user role
-            final user = authService.currentUser!;
-            if (user.role == UserRole.superAdmin ||
-                user.role == UserRole.loadingAdmin) {
-              return const LoadingScreen();
-            }
-            // Add other role-based redirections here
-            return const Scaffold(body: Center(child: Text('Welcome!')));
-          } else {
-            return const LoginScreen();
-          }
-        }
-        // Show a loading indicator while checking auth state
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
-      },
-    );
-    */
-  }
-}
-
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  Future<void> _signInWithGoogle() async {
-    if (_isLoading) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      print('Starting Google Sign In...');
-      final authService = context.read<AuthService>();
-      final user = await authService.signInWithGoogle();
-
-      if (mounted) {
-        if (user != null) {
-          print('User signed in successfully: ${user.email}');
-          // Navigate based on role
-          if (user.role == UserRole.superAdmin ||
-              user.role == UserRole.loadingAdmin) {
-            print('Navigating to loading screen...');
-            Navigator.of(context).pushReplacementNamed('/loading');
-          } else {
-            print('No route defined for role: ${user.role}');
-            setState(() {
-              _errorMessage = 'No access granted for this role';
-            });
-          }
-        } else {
-          print('User sign in was cancelled or failed');
-          setState(() {
-            _errorMessage = 'Sign in was cancelled or failed';
-          });
-        }
-      }
-    } catch (e, stackTrace) {
-      print('Error during sign in: $e');
-      print('Stack trace: $stackTrace');
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Error during sign in: ${e.toString()}';
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_isLoading) ...[
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              const Text('Signing in...'),
-            ] else
-              ElevatedButton(
-                onPressed: _signInWithGoogle,
-                child: const Text('Sign in with Google'),
-              ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 20),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
+// LoginScreen is now in lib/screens/login_screen.dart

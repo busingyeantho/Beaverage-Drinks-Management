@@ -17,7 +17,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
   // Form data
   DateTime _selectedDate = DateTime.now();
   final TextEditingController _driverNameController = TextEditingController();
-  final TextEditingController _vehicleNumberController = TextEditingController();
+  final TextEditingController _vehicleNumberController =
+      TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   // Product quantities for loading
@@ -56,9 +57,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
         final headers = data[0].map((h) => h.toString()).toList();
         final rows = data.sublist(1);
 
-        _loadingData = rows.map((row) {
-          return LoadingReturn.fromSheetsRow(row, headers);
-        }).toList();
+        _loadingData =
+            rows.map((row) {
+              return LoadingReturn.fromSheetsRow(row, headers);
+            }).toList();
       } else {
         // If sheet is empty, set up headers
         await _setupSheetHeaders();
@@ -98,7 +100,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
           vehicleNumber: _vehicleNumberController.text,
           productQuantities: Map.from(_productQuantities)
             ..removeWhere((_, value) => value == 0),
-          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+          notes:
+              _notesController.text.isNotEmpty ? _notesController.text : null,
         );
 
         // Convert to row for Google Sheets
@@ -200,7 +203,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
     }
 
     // Get all unique product names
-    final productNames = LoadingReturn.getAllProductNames(_loadingData).toList()..sort();
+    final productNames =
+        LoadingReturn.getAllProductNames(_loadingData).toList()..sort();
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -213,24 +217,25 @@ class _LoadingScreenState extends State<LoadingScreen> {
             ...productNames.map((name) => DataColumn(label: Text(name))),
             const DataColumn(label: Text('Notes')),
           ],
-          rows: _loadingData.map((loadingData) {
-            return DataRow(
-              cells: [
-                DataCell(
-                  Text(DateFormat('MMM d, y').format(loadingData.date)),
-                ),
-                DataCell(Text(loadingData.driverName)),
-                DataCell(Text(loadingData.vehicleNumber)),
-                ...productNames.map((name) {
-                  final quantity = loadingData.productQuantities[name] ?? 0;
-                  return DataCell(
-                    Text(quantity > 0 ? quantity.toString() : ''),
-                  );
-                }),
-                DataCell(Text(loadingData.notes ?? '')),
-              ],
-            );
-          }).toList(),
+          rows:
+              _loadingData.map((loadingData) {
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(DateFormat('MMM d, y').format(loadingData.date)),
+                    ),
+                    DataCell(Text(loadingData.driverName)),
+                    DataCell(Text(loadingData.vehicleNumber)),
+                    ...productNames.map((name) {
+                      final quantity = loadingData.productQuantities[name] ?? 0;
+                      return DataCell(
+                        Text(quantity > 0 ? quantity.toString() : ''),
+                      );
+                    }),
+                    DataCell(Text(loadingData.notes ?? '')),
+                  ],
+                );
+              }).toList(),
         ),
       ),
     );
@@ -337,7 +342,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextFormField(
-                      initialValue: _productQuantities[productName]?.toString() ?? '0',
+                      initialValue:
+                          _productQuantities[productName]?.toString() ?? '0',
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
@@ -380,12 +386,16 @@ class _LoadingScreenState extends State<LoadingScreen> {
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
-            child: _isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text(
-                    'Submit Loading Data',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+            child:
+                _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                      'Submit Loading Data',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
           ),
 
           // Error Message
@@ -410,4 +420,4 @@ class _LoadingScreenState extends State<LoadingScreen> {
     _notesController.dispose();
     super.dispose();
   }
-} 
+}

@@ -33,7 +33,7 @@ class RoleGuard extends StatelessWidget {
 }
 
 class _UnauthorizedView extends StatelessWidget {
-  const _UnauthorizedView({super.key});
+  const _UnauthorizedView();
 
   @override
   Widget build(BuildContext context) {

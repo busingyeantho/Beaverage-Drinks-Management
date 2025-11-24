@@ -36,14 +36,11 @@
   <title>john_pombe</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- App Configuration -->
-  <script src="config.js"></script>
+  <!-- App Configuration (no external config.js to keep GitHub Pages stable) -->
   <script>
     // Modern Flutter web initialization
     window.addEventListener('load', function() {
-      // Initialize Flutter engine with configuration
       if (window.flutterConfiguration) {
-        // For backward compatibility, we'll keep this but use it differently
         console.log('Configuration loaded:', window.flutterConfiguration);
       }
     });
@@ -56,28 +53,6 @@
   <script>
     // Show loading message
     console.log('Initializing app...');
-    
-    // Unregister any existing service workers
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-          console.log('Unregistering service worker:', registration);
-          registration.unregister();
-        }
-      }).catch(function(error) {
-        console.log('Service Worker unregistration failed: ', error);
-      });
-    }
-    
-    // Clear caches
-    if ('caches' in window) {
-      caches.keys().then(function(names) {
-        for (let name of names) {
-          console.log('Deleting cache:', name);
-          caches.delete(name);
-        }
-      });
-    }
   </script>
   
   <script src="flutter_bootstrap.js" async></script>

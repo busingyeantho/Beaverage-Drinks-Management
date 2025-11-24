@@ -17,7 +17,8 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   // Form data
   DateTime _selectedDate = DateTime.now();
   final TextEditingController _driverNameController = TextEditingController();
-  final TextEditingController _vehicleNumberController = TextEditingController();
+  final TextEditingController _vehicleNumberController =
+      TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   // Product quantities for returns
@@ -42,6 +43,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   }
 
   Future<void> _loadExistingData() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -56,22 +58,27 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
         final headers = data[0].map((h) => h.toString()).toList();
         final rows = data.sublist(1);
 
-        _returnsData = rows.map((row) {
-          return LoadingReturn.fromSheetsRow(row, headers);
-        }).toList();
+        _returnsData =
+            rows.map((row) {
+              return LoadingReturn.fromSheetsRow(row, headers);
+            }).toList();
       } else {
         // If sheet is empty, set up headers
         await _setupSheetHeaders();
       }
 
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Failed to load data: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to load data: $e';
+        });
+      }
     }
   }
 
@@ -86,6 +93,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      if (!mounted) return;
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -98,7 +106,8 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
           vehicleNumber: _vehicleNumberController.text,
           productQuantities: Map.from(_productQuantities)
             ..removeWhere((_, value) => value == 0),
-          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+          notes:
+              _notesController.text.isNotEmpty ? _notesController.text : null,
         );
 
         // Convert to row for Google Sheets
@@ -111,11 +120,11 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
         await _loadExistingData();
 
         // Reset the form
-        _formKey.currentState!.reset();
-        _productQuantities.updateAll((_, __) => 0);
-        _selectedDate = DateTime.now();
+        if (mounted && _formKey.currentState != null) {
+          _formKey.currentState!.reset();
+          _productQuantities.updateAll((_, __) => 0);
+          _selectedDate = DateTime.now();
 
-        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Returns data submitted successfully'),
@@ -124,9 +133,11 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
           );
         }
       } catch (e) {
-        setState(() {
-          _errorMessage = 'Failed to submit form: $e';
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Failed to submit form: $e';
+          });
+        }
       } finally {
         if (mounted) {
           setState(() {
@@ -200,7 +211,8 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     }
 
     // Get all unique product names
-    final productNames = LoadingReturn.getAllProductNames(_returnsData).toList()..sort();
+    final productNames =
+        LoadingReturn.getAllProductNames(_returnsData).toList()..sort();
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -213,24 +225,25 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
             ...productNames.map((name) => DataColumn(label: Text(name))),
             const DataColumn(label: Text('Notes')),
           ],
-          rows: _returnsData.map((returnsData) {
-            return DataRow(
-              cells: [
-                DataCell(
-                  Text(DateFormat('MMM d, y').format(returnsData.date)),
-                ),
-                DataCell(Text(returnsData.driverName)),
-                DataCell(Text(returnsData.vehicleNumber)),
-                ...productNames.map((name) {
-                  final quantity = returnsData.productQuantities[name] ?? 0;
-                  return DataCell(
-                    Text(quantity > 0 ? quantity.toString() : ''),
-                  );
-                }),
-                DataCell(Text(returnsData.notes ?? '')),
-              ],
-            );
-          }).toList(),
+          rows:
+              _returnsData.map((returnsData) {
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(DateFormat('MMM d, y').format(returnsData.date)),
+                    ),
+                    DataCell(Text(returnsData.driverName)),
+                    DataCell(Text(returnsData.vehicleNumber)),
+                    ...productNames.map((name) {
+                      final quantity = returnsData.productQuantities[name] ?? 0;
+                      return DataCell(
+                        Text(quantity > 0 ? quantity.toString() : ''),
+                      );
+                    }),
+                    DataCell(Text(returnsData.notes ?? '')),
+                  ],
+                );
+              }).toList(),
         ),
       ),
     );
@@ -274,7 +287,11 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_today, color: Colors.orange, size: 20),
+                const Icon(
+                  Icons.calendar_today,
+                  color: Colors.orange,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Selected Date: ${DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate)}',
@@ -337,7 +354,8 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextFormField(
-                      initialValue: _productQuantities[productName]?.toString() ?? '0',
+                      initialValue:
+                          _productQuantities[productName]?.toString() ?? '0',
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
@@ -380,12 +398,16 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: _isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text(
-                    'Submit Returns Data',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+            child:
+                _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                      'Submit Returns Data',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
           ),
 
           // Error Message
@@ -410,4 +432,4 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     _notesController.dispose();
     super.dispose();
   }
-} 
+}

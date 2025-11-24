@@ -17,7 +17,7 @@ class _SalesScreenState extends State<SalesScreen> with TickerProviderStateMixin
   bool _isLoading = true;
   String? _errorMessage;
   List<Map<String, dynamic>> _salesData = [];
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
   
   // Tab controller for different chart views
   late TabController _tabController;

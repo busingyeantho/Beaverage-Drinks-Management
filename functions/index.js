@@ -1,6 +1,28 @@
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const { getSheetNames, getSheetData } = require('./services/googleSheetsService');
-const cors = require('cors')({ origin: true });
+// Default to Firebase Hosting domains if no CORS origins specified
+const defaultOrigins = [
+  'https://johnpomb-b85d0.web.app',
+  'https://johnpomb-b85d0.firebaseapp.com',
+  'http://localhost:5000', // For local development
+];
+const allowedOrigins = (process.env.ALLOWED_CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const finalOrigins = allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins;
+const requireAuth = (process.env.REQUIRE_AUTH || '').toLowerCase() === 'true';
+const cors = require('cors')({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // Allow non-browser clients
+    if (finalOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`CORS blocked origin: ${origin}`);
+    callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+  },
+});
+
+// Initialize Admin SDK once
+try { admin.initializeApp(); } catch (_) {}
 
 // Set global options for all functions
 functions.setGlobalOptions({
@@ -9,15 +31,33 @@ functions.setGlobalOptions({
   timeoutSeconds: 60,
 });
 
-// Helper function to handle CORS and errors
+// Verify Firebase ID token from Authorization: Bearer <token>
+async function verifyAuth(req) {
+  const authHeader = req.headers.authorization || '';
+  const match = authHeader.match(/^Bearer (.*)$/);
+  if (!match) {
+    throw Object.assign(new Error('Unauthorized'), { status: 401 });
+  }
+  const idToken = match[1];
+  const decoded = await admin.auth().verifyIdToken(idToken);
+  return decoded;
+}
+
+// Helper function to handle CORS, auth and errors
 const handleRequest = (handler) => (req, res) => {
   return cors(req, res, async () => {
     try {
+      // Enforce auth if enabled
+      if (requireAuth) {
+        const user = await verifyAuth(req);
+        req.user = user;
+      }
       const result = await handler(req, res);
-      return result;
+      return res.status(200).json(result);
     } catch (error) {
       console.error('Error:', error);
-      return res.status(500).json({
+      const status = error.status || 500;
+      return res.status(status).json({
         success: false,
         error: error.message || 'An error occurred',
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,

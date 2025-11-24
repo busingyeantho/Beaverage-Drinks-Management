@@ -31,7 +31,7 @@ void main() async {
       'client_email': clientEmail,
       'type': 'service_account',
       'client_id':
-          '${clientEmail.split('@')[0]}', // Generate a client ID from the email
+          clientEmail.split('@')[0], // Generate a client ID from the email
       'token_uri': 'https://oauth2.googleapis.com/token',
     });
 
@@ -114,13 +114,13 @@ class MyApp extends material.StatefulWidget {
   final String spreadsheetId;
 
   const MyApp({
-    material.Key? key,
+    super.key,
     required this.spreadsheetTitle,
     required this.sheets,
     required this.targetSheet,
     required this.sheetsApi,
     required this.spreadsheetId,
-  }) : super(key: key);
+  });
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -353,7 +353,7 @@ class _MyAppState extends material.State<MyApp> {
 class ErrorApp extends material.StatelessWidget {
   final String error;
 
-  const ErrorApp({material.Key? key, required this.error}) : super(key: key);
+  const ErrorApp({super.key, required this.error});
 
   @override
   material.Widget build(material.BuildContext context) {
